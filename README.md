@@ -29,6 +29,12 @@ the source, then rebuild — never hand-edit the zip.
 
 ## Rebuilding the zip
 
+In a Cowork session with this folder connected, asking Claude to rebuild the
+zip is usually the least friction: it edits the source and repackages in one
+pass, so `experts-protocol/` and `experts-protocol.skill` can't drift apart.
+That's a convenience, not a requirement -- the manual steps below always work
+and are the way to do it from a machine without a session open.
+
 From the repo root:
 
 ```powershell
