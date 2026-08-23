@@ -1,6 +1,7 @@
 ---
 name: experts-protocol
-description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, promotion rules, provenance, health checks, how to create a new expert, and how to deploy the system to a new vault. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert from scratch, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote into a skill, or answering "what experts do I have". Also use when deciding what belongs in a skill versus a standing note, when adding or editing vault notes with frontmatter, when an expert skill references "the protocol" without spelling out the rules, or when auditing a vault for problems — checking whether learning summaries are skimmable, hunting for broken links, or reconciling an _index.md against the folder it describes.
+protocol_version: 2.0.0
+description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links, index drift.
 ---
 
 # Expert Protocol
@@ -34,6 +35,30 @@ why it lives outside any expert's folder.
 The reason this table matters more than the tree structure: the skill is the only
 component that cannot be edited in the course of a conversation. Everything
 downstream of that fact follows from it.
+
+## Operations
+
+Ask "what can you do" of this protocol, or of any expert built on it, and
+this table is the answer — fixed, not reconstructed by scanning section
+headers. Update it when an operation is added or removed; until then it's
+complete with no inference required.
+
+| Operation | Scope | Invoke via | What it does | Full detail |
+|---|---|---|---|---|
+| **Health check** | one expert | the expert itself (e.g. `expert-warframe`) | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links, roster drift | Health checks |
+| **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol | Checking an existing skill against the protocol |
+| **Create a new expert** | new expert | `experts-protocol` (no expert exists yet) | Elicit, draft, and stand up a new expert from scratch | Creating a new expert |
+| **Deploy to a new vault** | whole system | `experts-protocol` | First-time setup on a vault that has never held experts | Deploying to a new vault |
+| **Promote a learning** | one expert | the expert being promoted from | Flag a settled finding for promotion (Matthew finalizes the skill edit) | Promotion is the one step that requires Matthew |
+
+**Rule of thumb:** if the operation only needs knowledge the expert already
+has about its own domain and its own folders, invoke the expert. If it needs
+knowledge that lives in the protocol itself — the conformance rules, or
+anything before an expert exists at all — invoke `experts-protocol`.
+
+Individual expert skills should point here rather than restate any row —
+same reasoning as *The one index*: one place that changes at protocol-edit
+cadence beats several copies that drift.
 
 ## Vault layout
 
@@ -223,14 +248,27 @@ the skill — even at creation time.
 
 ### 3. Write the description first
 
-The `description` frontmatter field decides whether the skill ever fires. A
-perfect skill with a vague description is inert, so write it before the body,
-while the elicitation is fresh.
+The `description` frontmatter field decides whether the skill ever fires, and
+it's also the one part of a skill paid for on every session regardless of
+whether it fires — write it before the body, while the elicitation is fresh,
+and keep it deliberately thin.
 
-It should name the concrete triggers — topics, tools, artifacts, and the phrasings
-the person actually uses, including indirect ones ("what should I work on next",
-or signs of being stuck). Write it in third person, describing when to use the
-skill rather than what the skill contains.
+**Objective: minimize, not maximize.** Name the domain and its distinctive
+vocabulary — proper nouns, tools, jargon nobody outside the domain uses — and
+stop. Write it in third person, describing when to use the skill rather than
+what it contains. No mood or behavior clauses ("also use when he seems X"), no
+restating one topic three ways for safety margin — thoroughness belongs in the
+body, which costs nothing until the skill fires.
+
+The one exception that survives being asked "why is this here": a trigger
+catching something the person wouldn't think to invoke on their own. In
+practice this is rare, because a trigger scoped to "while already talking about
+the domain" adds nothing the domain name wasn't already catching, and a trigger
+with no domain content isn't domain-specific at all — it's a flat cost every
+session pays. Default to skepticism of any exception; a small, self-tracked
+roster is not a reason to add coverage — descriptions stay minimal regardless of
+roster size, since growth is `Experts/_index.md`'s problem to solve (see The one
+index), not the description's.
 
 **Hard constraints, enforced at validation:**
 
@@ -240,12 +278,14 @@ skill rather than what the skill contains.
 | `description` | ≤ 1024 chars; no angle brackets (`<` or `>`) |
 | `compatibility` | ≤ 500 chars, if used at all |
 
-The description limit is the one that actually bites, and it bites late: triggers
-accumulate as a skill gets used, and a description that fits comfortably at
-creation can exceed the cap two revisions later. When it does, cut redundant
-trigger phrasings rather than dropping whole categories of trigger — near-synonyms
-are the cheapest thing to lose, and losing a category is how a skill silently
-stops firing for a whole class of request.
+Also stamp `protocol_version` in the skill's frontmatter with this protocol's
+current version (see Versioning) — every expert skill carries this field,
+recording the version it was last brought into conformance with.
+
+Under the old maximal approach, the description limit was the thing that
+eventually forced trimming; under minimize-by-default it should rarely be
+approached at all. Reaching for it is a signal to ask why the description grew,
+not a target to write toward.
 
 Validate before packaging rather than after. A skill that fails validation fails
 to install, and the error arrives at upload time when the context that produced
@@ -253,13 +293,49 @@ it is gone.
 
 ### 4. Draft the body
 
-There's no required structure, but this shape has held up: who this is for and
-what they're aiming at · where things live (vault folders, reference material,
-any structured store) · the substantive domain content · how a working session
-goes · failure modes and how to respond to them · tone.
+Two parts of this shape are required; the rest is loose.
 
-Keep it to what changes behavior. Background that reads well but wouldn't alter
-a single response is cost without benefit.
+**Always: Where knowledge lives.** State plainly that `learnings/` and
+`standing/` are Obsidian vault paths — not local files, not anything in the
+skill's own bundle — then give this expert's own vault-relative paths by name:
+`Experts/<bare-name>/learnings/`, `Experts/<bare-name>/standing/`. Give each
+folder a general statement of purpose — what kind of thing goes here, not just
+the files that happen to exist today, so the expert knows it can create a new
+standing note on a new fast-moving topic rather than only recognizing the ones
+it was handed at creation. Per *Access is mechanism, not convention*, don't
+hardcode which tool reaches the vault — say "vault" and let the expert use
+whatever's configured. If the skill has its own bundled `references/` folder,
+say what's in it and distinguish it explicitly from both the vault's
+`learnings/`/`standing/` and the vault's shared `Reference/` tier — three
+different things sharing confusable names. State whether the expert draws on
+shared `Reference/` at all, even if the answer is "no." Close with the no-vault
+fallback: if no vault is reachable, say so plainly rather than pretending to
+persist findings. Point to `experts-protocol` by name for anything beyond
+location — promotion, provenance, versioning — rather than restating those
+rules here.
+
+**Sometimes: Installation.** A named section for org- or context-specific
+material — present only when the domain actually has institutional context (an
+ERP system with named colleagues and responsibilities; not a solo hobby). Test:
+*would a colleague using the same expert need this, and is it neither pure
+domain knowledge nor specific to how you personally work?* If yes, installation.
+If the domain has no institutional context, omit the section rather than
+including it empty.
+
+**The rest stays loose**, and this shape has held up: a short framing near the
+top (who this is for, what they're aiming at) · the substantive domain content ·
+how a working session goes · failure modes and how to respond to them · tone ·
+and, **last**, a section named after the person — `## Working with Matthew`, not
+`## Personal` — covering what they already know, where they get stuck, what a
+bad session looks like. Naming it after the person and placing it last is
+deliberate: it's the swap-out or strip-out unit if this skill is ever shared or
+gated behind an institution-facing interface, without building any runtime
+dispatch logic now. The short top framing stays even in a stripped-down portable
+version; the named section is the detailed calibration payload and is what gets
+removed or swapped.
+
+Keep all of it to what changes behavior. Background that reads well but wouldn't
+alter a single response is cost without benefit.
 
 ### 5. Create the vault structure
 
@@ -283,6 +359,82 @@ usually the description (it fires too rarely or too often) and the skill/standin
 split (something stable-looking turns out to move). Both are cheap to fix once
 the expert has been used a few times, and neither is worth agonizing over up
 front.
+
+## Versioning
+
+This protocol carries a version, recorded in its own frontmatter as
+`protocol_version` (e.g. `2.0.0`) and stated once in the body too, so it's
+visible without opening frontmatter — **this protocol is `protocol_version:
+2.0.0`.** Every expert skill carries the same field, `protocol_version`: the
+version it was last brought into conformance with. One stamp, not separate
+created/updated fields — a second field here would just be something else that
+goes stale. The field means slightly different things depending which file it's
+on: a self-declaration on the protocol, a conformance claim on an expert skill —
+same name, same comparison mechanics, worth knowing even though it doesn't need
+a different name.
+
+Standard semver: MAJOR for a change that makes a previously-conformant skill
+non-conformant (a new required section, a changed hard constraint, a changed
+body-shape expectation), MINOR for a backward-compatible addition, PATCH for
+wording or typo fixes that change nothing structural. Bump MAJOR even for a
+narrow change — a schema change that invalidates every existing record is
+breaking regardless of how much surrounding structure survives unchanged.
+
+The payoff is a cheap check before reading a single line of the skill being
+examined:
+
+- **Equal** — conformant by definition. Nothing to check.
+- **Protocol ahead** — the skill predates this revision. Run the conformance
+  check, fix what's flagged, update `protocol_version` to match.
+- **Skill ahead** — shouldn't happen under normal use. Flag it and stop; Matthew
+  resolves it rather than either side guessing which is stale.
+
+## Checking an existing skill against the protocol
+
+*Creating a new expert* says what a skill should look like when it's written
+from scratch. This is the same checklist run in the other direction, against a
+skill that already exists — usually because the protocol itself just changed.
+Expect this to recur: every protocol revision leaves a batch of skills that
+predate it.
+
+This procedure is self-contained. It may run in a fresh conversation that has
+none of the context behind a given revision — just this skill and the skill
+being checked. Don't assume anything beyond what's written here and in
+*Creating a new expert*.
+
+This is distinct from *Health checks* below: that audits the contents of
+`learnings/` and `standing/`; this audits the skill file itself.
+
+**Step 0: check the version first.** Compare the skill's `protocol_version`
+against this protocol's current version (see Versioning). Equal means already
+conformant — skip the rest. Only proceed past this step when the protocol is
+ahead.
+
+**What to check** — two sources, already defined above, apply them rather than
+restating them:
+- **Frontmatter** — the hard constraints in step 3 (`name`, `description`,
+  `compatibility` limits), plus description proportionality: does the
+  description contain anything beyond the domain name and domain-specific
+  vocabulary? Flag anything that does.
+- **Body shape** — the shape in step 4: where-things-live stated explicitly as
+  vault paths, concrete, with `learnings/` and `standing/` each given a general
+  purpose rather than named only by their current files; installation present
+  only where the domain has institutional context; personal material
+  consolidated into one named section at the end.
+
+**Running it across several skills:**
+1. **Survey before fixing.** Read every skill first; produce one compact table —
+   skill name, which checks it fails. No rewrites yet. Same lead-with-the-count
+   instinct as *Health checks*: a mostly-conformant batch should read as a short
+   list, not several essays.
+2. **Fix one at a time**, in whatever order the person picks. Confirm the gap
+   and the proposed rewrite before drafting body text — a conformance fix is
+   still a rewrite of a working skill, not a mechanical patch.
+3. **Every fix still needs the normal upload loop.** A rewritten skill is a
+   revised skill; *Close the loop on uploads* applies unchanged — nothing here
+   shortcuts packaging, upload, or confirmation. Update `protocol_version` on the
+   skill only once the upload is confirmed, same timing as the rest of that
+   loop.
 
 ## Promotion is the one step that requires Matthew
 
@@ -372,8 +524,8 @@ wrote should say what changed rather than reassigning authorship wholesale.
 
 **Notice that this couples experts.** Shared writable reference is the one
 channel through which one expert's work can reach another. That doesn't violate
-the no-cross-expert rule — reference is shared by design — but it does mean a
-careless write has a blast radius beyond the expert that made it. So: write
+the no-cross-expert rule below — reference is shared by design — but it does mean
+a careless write has a blast radius beyond the expert that made it. So: write
 reference material that stands on its own, without assuming the reader shares
 your domain's context or vocabulary. If a note only makes sense to one expert,
 it was a learning, not reference.
