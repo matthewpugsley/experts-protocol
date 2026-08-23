@@ -1,6 +1,6 @@
 ---
 name: experts-protocol
-protocol_version: 2.0.0
+protocol_version: 2.1.6
 description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links, index drift.
 ---
 
@@ -46,7 +46,7 @@ complete with no inference required.
 | Operation | Scope | Invoke via | What it does | Full detail |
 |---|---|---|---|---|
 | **Health check** | one expert | the expert itself (e.g. `expert-warframe`) | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links, roster drift | Health checks |
-| **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol | Checking an existing skill against the protocol |
+| **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol (plus vault state, when checking `experts-protocol` itself) | Checking an existing skill against the protocol |
 | **Create a new expert** | new expert | `experts-protocol` (no expert exists yet) | Elicit, draft, and stand up a new expert from scratch | Creating a new expert |
 | **Deploy to a new vault** | whole system | `experts-protocol` | First-time setup on a vault that has never held experts | Deploying to a new vault |
 | **Promote a learning** | one expert | the expert being promoted from | Flag a settled finding for promotion (Matthew finalizes the skill edit) | Promotion is the one step that requires Matthew |
@@ -165,11 +165,16 @@ only formatting.** A learning's summary opening with how settled the claim is
 stays here, because promotion depends on that folder being skimmable. Log
 ordering goes there, because nothing downstream breaks either way.
 
-**The vault copy is authoritative.** This skill carries a copy of both files
-under `references/`, but that copy is seed material for standing the system up
-on a fresh vault — see Deploying below. If the bundled copy and the vault copy
-disagree, the vault is right and the bundle is stale; never sync the vault
-backwards to match the bundle.
+**The vault copy and the bundled copy are meant to be identical.** This skill
+carries a copy of both files under `references/`, used only to seed a fresh
+vault that doesn't have `_ExpertsProtocol/` yet — see Deploying below. Outside
+that first-deploy case, neither side is authoritative over the other by
+default; the two are kept in sync deliberately, as one edit, not as a standing
+rule about which one wins. If a conformance check on this skill ever finds
+them disagreeing, that isn't a signal about which side is right — it's
+evidence the sync didn't happen, and the fix is to finish it, not to pick a
+winner. See *Checking an existing skill against the protocol* for how that
+check runs.
 
 Two points stay here, because they are protocol rather than field semantics.
 Retrieval is a property of the *folder*, not something each note declares, and
@@ -280,7 +285,23 @@ index), not the description's.
 
 Also stamp `protocol_version` in the skill's frontmatter with this protocol's
 current version (see Versioning) — every expert skill carries this field,
-recording the version it was last brought into conformance with.
+recording the version it was last brought into conformance with. Bare, at the
+top level — not nested under `metadata`.
+
+**Packaging note.** `skill-creator`'s bundled `quick_validate.py` (run
+automatically by its `package_skill.py`) rejects any top-level frontmatter key
+outside `{name, description, license, allowed-tools, metadata,
+compatibility}`, so it flags a bare `protocol_version` as invalid. That's a
+false positive for this workflow, not a real constraint — confirmed
+2026-08-23 by a direct test upload through Claude Desktop's personal-skill
+settings, which accepted a bare custom top-level key without complaint. This
+repo's own build has always sidestepped the issue by zipping manually rather
+than going through `package_skill.py` (see its README's *Rebuilding the zip*).
+Package every expert skill the same way — direct zip
+(`Compress-Archive`/`zip -r` on the skill folder, then rename to `.skill`),
+never through `package_skill.py` — so this false positive doesn't block a
+conformance fix. If `quick_validate.py`'s allowlist is ever tightened for
+real, this note is the thing to revisit.
 
 Under the old maximal approach, the description limit was the thing that
 eventually forced trimming; under minimize-by-default it should rarely be
@@ -363,9 +384,9 @@ front.
 ## Versioning
 
 This protocol carries a version, recorded in its own frontmatter as
-`protocol_version` (e.g. `2.0.0`) and stated once in the body too, so it's
+`protocol_version` (e.g. `2.1.6`) and stated once in the body too, so it's
 visible without opening frontmatter — **this protocol is `protocol_version:
-2.0.0`.** Every expert skill carries the same field, `protocol_version`: the
+2.1.6`.** Every expert skill carries the same field, `protocol_version`: the
 version it was last brought into conformance with. One stamp, not separate
 created/updated fields — a second field here would just be something else that
 goes stale. The field means slightly different things depending which file it's
@@ -405,6 +426,22 @@ being checked. Don't assume anything beyond what's written here and in
 This is distinct from *Health checks* below: that audits the contents of
 `learnings/` and `standing/`; this audits the skill file itself.
 
+**One addition when the skill being checked is `experts-protocol` itself.**
+Every other check here is about a skill file's own frontmatter and body —
+this one is about whether the vault side of the protocol has kept up. If a
+vault is reachable: confirm `_ExpertsProtocol/` exists with both `Frontmatter
+Guide.md` and `Frontmatter Template.md` — if it doesn't, that's a first-deploy
+gap, not a conformance gap, so point at *Deploying to a new vault* rather than
+reconstructing it here. If it exists, diff both files against this skill's own
+bundled `references/` copies. Equal — nothing to do. Different — report the
+diff plainly and propose syncing the vault to match the bundle, but never
+apply it without confirmation: a difference says only *that* the two
+diverged, not *why*, and the fix in the rare reverse case looks different.
+This addition doesn't depend on Step 0 or on `protocol_version` at all —
+the Guide and Template aren't a separately versioned thing, they're
+implementation detail of this one skill, and either they match its current
+bundle or they don't.
+
 **Step 0: check the version first.** Compare the skill's `protocol_version`
 against this protocol's current version (see Versioning). Equal means already
 conformant — skip the rest. Only proceed past this step when the protocol is
@@ -432,9 +469,12 @@ restating them:
    still a rewrite of a working skill, not a mechanical patch.
 3. **Every fix still needs the normal upload loop.** A rewritten skill is a
    revised skill; *Close the loop on uploads* applies unchanged — nothing here
-   shortcuts packaging, upload, or confirmation. Update `protocol_version` on the
-   skill only once the upload is confirmed, same timing as the rest of that
-   loop.
+   shortcuts packaging, upload, or confirmation. The `protocol_version` bump
+   belongs in the same edit and the same package as the fix itself — it's
+   part of the fix, not a separate follow-up. What waits on upload
+   confirmation is the *closure record*: don't mark the `standing/` pending
+   note resolved, or delete a promoted learning, until Matthew confirms the
+   upload actually happened.
 
 ## Promotion is the one step that requires Matthew
 

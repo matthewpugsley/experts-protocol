@@ -1,9 +1,11 @@
 ---
 title: Frontmatter Guide
-tags: [workflow, reference]
-priority: 
+tags:
+  - workflow
+  - reference
+priority:
 retrieval: auto
-updated: 2026-08-15
+updated: 2026-08-23
 ---
 
 ## Summary
@@ -11,7 +13,7 @@ Reference guide for the shape of a vault note: the YAML frontmatter fields and
 the body conventions that go with them. Aligned with the model defined in the
 `experts-protocol` skill, which points here rather than restating any of it.
 
-## Fields
+## Frontmatter Field Definitions
 
 ### title
 Human-readable name for the note. Can differ from the filename.
@@ -65,31 +67,11 @@ Elsewhere in the vault there's no folder-based default defined yet — use
 `retrieval` explicitly (`auto` or `on-demand`) until one is, the way this note
 does.
 
-## Note structure
-A note opens with `## Summary` and ends with `## Log`. Whatever the note is
-actually about goes between them.
+## Template Structure
 
-**Log entries are newest-first.** New entries go at the *top* of the `## Log`
-section, directly under the heading — not appended at the bottom. The reason is
-that the usual question is "what changed lately?", and the answer should be the
-first thing under the heading rather than the last line of the file.
-
-Entry headings are `### YYYY-MM-DD`, optionally followed by a short label
-(`### 2026-08-14 — Bone Zone hunt`). Where a note uses `## Entries` instead of
-`## Log` — session logs do — the same ordering applies.
-
-One practical note for tools: newest-first is a single heading-targeted prepend,
-which works no matter where the Log sits in the file. Appending to the end of
-the file is *not* equivalent, because many notes have content after the Log.
-
-## Log
-### 2026-08-15
-- Added this Note structure section, setting log order to newest-first
-  across the vault, and reversed the logs in this file and the Template.
-- Replaced `status` (draft/active/archived) with folder-based classification
-  and the `retrieval` field, and re-scoped `priority` to ordering-only —
-  matching the frontmatter model in `experts-protocol`. Reordered fields to
-  title, tags, priority, retrieval, updated.
-
-### 2025-05-29
-- Created
+- ### Frontmatter - list of frontmatter properties (yaml)
+- ### Summary - summary of the document goes here
+- ### Content - body of the document goes here
+- ### Log - newest-first; entries are `### YYYY-MM-DD`, prepended directly
+  under the `## Log` heading, never appended to the end of the file — many
+  notes have content after the Log, so those two aren't equivalent
