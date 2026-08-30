@@ -32,8 +32,9 @@ the source, then rebuild — never hand-edit the zip.
 In a Cowork session with this folder connected, asking Claude to rebuild the
 zip is usually the least friction: it edits the source and repackages in one
 pass, so `experts-protocol/` and `experts-protocol.skill` can't drift apart.
-That's a convenience, not a requirement -- the manual steps below always work
-and are the way to do it from a machine without a session open.
+That's a convenience, not a requirement — the manual steps below always
+work, whether run by hand, by a Code session opened at the repo root, or
+on a machine with no Claude session open at all.
 
 From the repo root:
 

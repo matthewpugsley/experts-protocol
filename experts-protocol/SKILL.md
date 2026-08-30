@@ -1,6 +1,6 @@
 ---
 name: experts-protocol
-protocol_version: 2.1.6
+protocol_version: 2.2.0
 description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links, index drift.
 ---
 
@@ -49,6 +49,7 @@ complete with no inference required.
 | **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol (plus vault state, when checking `experts-protocol` itself) | Checking an existing skill against the protocol |
 | **Create a new expert** | new expert | `experts-protocol` (no expert exists yet) | Elicit, draft, and stand up a new expert from scratch | Creating a new expert |
 | **Deploy to a new vault** | whole system | `experts-protocol` | First-time setup on a vault that has never held experts | Deploying to a new vault |
+| **Connect a new client** | one client | `experts-protocol` | Connect an additional client (e.g. Claude Code) to a vault already set up for the expert system | Deploying to a new client (Claude Code) |
 | **Promote a learning** | one expert | the expert being promoted from | Flag a settled finding for promotion (Matthew finalizes the skill edit) | Promotion is the one step that requires Matthew |
 
 **Rule of thumb:** if the operation only needs knowledge the expert already
@@ -200,14 +201,45 @@ Run this once; afterwards *Creating a new expert* applies normally.
    the vault copy wins by definition.
 3. **Create `Experts/` and its `_index.md`** roster — empty is fine when there
    are no experts yet. See Indexes for the format; keep it to the bare list.
+   **If `_index.md` already exists, leave the roster as-is** — another client
+   may have already run this procedure on the same vault.
 4. **Report what you created and what you skipped**, naming each file left
    untouched because it was already there. A silent deploy is indistinguishable
    from one that quietly overwrote something.
+
+Steps 2–4 are surface-independent: if the vault was already prepped from
+another client, most of this is already done, and re-running it should
+simply confirm that rather than duplicate anything.
 
 Deploying is not migrating. A vault carrying notes under an older convention
 keeps them as they are; nothing here rewrites existing frontmatter. If old notes
 use fields the Guide no longer defines, say so and let Matthew decide — a bulk
 rewrite of his vault is his call, not a step you take on the way past.
+
+## Deploying to a new client (Claude Code)
+
+Use this when the vault is already set up for the expert system — run from
+some other client via *Deploying to a new vault* — and a new client just
+needs to be connected to it. If the vault has never held experts at all, use
+that operation instead; this one assumes it already has.
+
+Obsidian MCP tools are vault-scoped by construction — Desktop and Chat
+sessions never need to be told where the vault is, because the server
+already knows. Claude Code's filesystem access isn't scoped that way, so the
+vault root has to be stated explicitly, once, per machine, in Code's global
+`CLAUDE.md`:
+
+```
+## Environment
+- Obsidian vault root: <path>
+```
+
+That's the only step genuinely specific to this client. The rest of
+*Deploying to a new vault* — seeding `_ExpertsProtocol/`, creating
+`Experts/` and its `_index.md` — still applies; run it too. Its steps are
+idempotent (see the guards on steps 2 and 3), so on an already-prepared
+vault this will simply confirm that and do nothing further, not duplicate
+anything.
 
 ## Creating a new expert
 
@@ -384,9 +416,9 @@ front.
 ## Versioning
 
 This protocol carries a version, recorded in its own frontmatter as
-`protocol_version` (e.g. `2.1.6`) and stated once in the body too, so it's
+`protocol_version` (e.g. `2.2.0`) and stated once in the body too, so it's
 visible without opening frontmatter — **this protocol is `protocol_version:
-2.1.6`.** Every expert skill carries the same field, `protocol_version`: the
+2.2.0`.** Every expert skill carries the same field, `protocol_version`: the
 version it was last brought into conformance with. One stamp, not separate
 created/updated fields — a second field here would just be something else that
 goes stale. The field means slightly different things depending which file it's
@@ -678,8 +710,11 @@ The same holds for the non-vault parts of reference. A structured store is
 reached through whatever tooling exposes it; that tooling will change, and the
 tier's definition — shared, permanent, never promoted — will not.
 
-One mechanical hazard is worth stating anyway, because getting it wrong damages
-the vault rather than just inconveniencing you: **rename and move notes through
-Obsidian itself**, not through the filesystem, so that wikilinks are rewritten
-to follow. A filesystem-level move leaves every inbound link pointing at a path
-that no longer exists.
+One mechanical hazard is worth naming: a filesystem-level rename or move
+can leave inbound wikilinks pointing at a path that no longer exists.
+Prefer a vault-aware rename tool when one is reachable — it rewrites links
+as part of the move. When it isn't, or filesystem access is what's
+actually in use, check for inbound links first — a full-vault text search
+for the note's name is cheap regardless of vault size in personal-use
+range — and say what you find. Don't block the move on this; flag it and
+proceed.
