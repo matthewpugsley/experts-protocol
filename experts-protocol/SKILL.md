@@ -1,6 +1,6 @@
 ---
 name: experts-protocol
-protocol_version: 2.2.0
+protocol_version: 2.3.0
 description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links, index drift.
 ---
 
@@ -89,6 +89,18 @@ all. Do not conclude the structure is broken, and do not "repair" it, on the
 strength of a file listing. Use a directory-aware call, or just create the note
 you came to write — the folder is there. This misreading has happened more than
 once; it is a property of the tools, not of the vault.
+
+**A remembered or stated filename is not a confirmed one.** A skill's "Where
+things live" section may name current files as illustrative examples, and
+prior turns or memory may carry forward names from an earlier session.
+Neither is ground truth once a folder has been restructured, split, or
+renamed into. Before reading or writing to a specific file — and especially
+before treating a skill-body list of filenames as exhaustive — list the
+directory. This is the same failure as the empty-folder case above, just in
+the opposite direction: trusting an assumption about contents instead of
+checking them. The fix costs one cheap call; skipping it risks writing to a
+file that no longer plays the role you think it does, or missing one that
+now does.
 
 ## Folder placement is the classification
 
@@ -416,9 +428,9 @@ front.
 ## Versioning
 
 This protocol carries a version, recorded in its own frontmatter as
-`protocol_version` (e.g. `2.2.0`) and stated once in the body too, so it's
+`protocol_version` (e.g. `2.3.0`) and stated once in the body too, so it's
 visible without opening frontmatter — **this protocol is `protocol_version:
-2.2.0`.** Every expert skill carries the same field, `protocol_version`: the
+2.3.0`.** Every expert skill carries the same field, `protocol_version`: the
 version it was last brought into conformance with. One stamp, not separate
 created/updated fields — a second field here would just be something else that
 goes stale. The field means slightly different things depending which file it's
