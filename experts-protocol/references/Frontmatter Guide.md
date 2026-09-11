@@ -5,7 +5,7 @@ tags:
   - reference
 priority:
 retrieval: auto
-updated: 2026-08-23
+updated: 2026-09-09
 ---
 
 ## Summary
@@ -59,9 +59,14 @@ Within `Experts/<expert>/`, folder defaults are:
 
 | Folder | Default |
 |---|---|
-| `standing/` | auto-load |
+| `standing/` | on-demand |
 | `learnings/` | on-demand |
 | `Reference/` | searched, never bulk-loaded |
+
+Nothing auto-loads by folder default anywhere. `retrieval: auto` is the only
+way a note loads automatically — a deliberate, per-note exception, never a
+folder-level assumption. (Changed 2026-09-09: `standing/` previously
+defaulted to auto-load.)
 
 Elsewhere in the vault there's no folder-based default defined yet — use
 `retrieval` explicitly (`auto` or `on-demand`) until one is, the way this note

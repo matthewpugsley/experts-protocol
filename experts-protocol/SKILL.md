@@ -1,7 +1,7 @@
 ---
 name: experts-protocol
-protocol_version: 2.3.0
-description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links, index drift.
+protocol_version: 3.1.0
+description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links.
 ---
 
 # Expert Protocol
@@ -45,7 +45,7 @@ complete with no inference required.
 
 | Operation | Scope | Invoke via | What it does | Full detail |
 |---|---|---|---|---|
-| **Health check** | one expert | the expert itself (e.g. `expert-warframe`) | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links, roster drift | Health checks |
+| **Health check** | one expert | the expert itself (e.g. `expert-warframe`) | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links | Health checks |
 | **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol (plus vault state, when checking `experts-protocol` itself) | Checking an existing skill against the protocol |
 | **Create a new expert** | new expert | `experts-protocol` (no expert exists yet) | Elicit, draft, and stand up a new expert from scratch | Creating a new expert |
 | **Deploy to a new vault** | whole system | `experts-protocol` | First-time setup on a vault that has never held experts | Deploying to a new vault |
@@ -58,7 +58,7 @@ knowledge that lives in the protocol itself — the conformance rules, or
 anything before an expert exists at all — invoke `experts-protocol`.
 
 Individual expert skills should point here rather than restate any row —
-same reasoning as *The one index*: one place that changes at protocol-edit
+same reasoning as *No indexes*: one place that changes at protocol-edit
 cadence beats several copies that drift.
 
 ## Vault layout
@@ -68,7 +68,6 @@ _ExpertsProtocol/
   Frontmatter Guide.md   ← field reference; authoritative over this skill's copy
   Frontmatter Template.md ← blank starting block for a new note
 Experts/
-  _index.md              ← the expert roster; the answer to "what experts do I have"
   <expert-name>/
     learnings/           ← draft knowledge that may later be promoted into the skill
     standing/            ← what we're working on now, recent context, open to-dos
@@ -211,10 +210,8 @@ Run this once; afterwards *Creating a new expert* applies normally.
    Template.md` is absent, copy it from this skill's `references/` folder. **If
    the file already exists, leave it alone.** It may carry local revisions, and
    the vault copy wins by definition.
-3. **Create `Experts/` and its `_index.md`** roster — empty is fine when there
-   are no experts yet. See Indexes for the format; keep it to the bare list.
-   **If `_index.md` already exists, leave the roster as-is** — another client
-   may have already run this procedure on the same vault.
+3. **Create `Experts/`.** Empty is fine when there are no experts yet — no
+   roster file to seed; the folder itself is the index (see *No indexes*).
 4. **Report what you created and what you skipped**, naming each file left
    untouched because it was already there. A silent deploy is indistinguishable
    from one that quietly overwrote something.
@@ -248,7 +245,7 @@ vault root has to be stated explicitly, once, per machine, in Code's global
 
 That's the only step genuinely specific to this client. The rest of
 *Deploying to a new vault* — seeding `_ExpertsProtocol/`, creating
-`Experts/` and its `_index.md` — still applies; run it too. Its steps are
+`Experts/` — still applies; run it too. Its steps are
 idempotent (see the guards on steps 2 and 3), so on an already-prepared
 vault this will simply confirm that and do nothing further, not duplicate
 anything.
@@ -314,10 +311,10 @@ catching something the person wouldn't think to invoke on their own. In
 practice this is rare, because a trigger scoped to "while already talking about
 the domain" adds nothing the domain name wasn't already catching, and a trigger
 with no domain content isn't domain-specific at all — it's a flat cost every
-session pays. Default to skepticism of any exception; a small, self-tracked
-roster is not a reason to add coverage — descriptions stay minimal regardless of
-roster size, since growth is `Experts/_index.md`'s problem to solve (see The one
-index), not the description's.
+session pays. Default to skepticism of any exception; a growing number of
+experts is not a reason to add coverage — descriptions stay minimal regardless
+of roster size, since "what experts do I have" is answered by listing the
+`Experts/` folder directly (see *No indexes*), not by the description.
 
 **Hard constraints, enforced at validation:**
 
@@ -408,14 +405,12 @@ alter a single response is cost without benefit.
 `expert-` prefix on the folder. Write the standing notes identified in step 2 —
 a new expert with an empty `standing/` usually means step 1 didn't dig enough.
 
-Add the expert to the roster index in the same action, not later.
-
 ### 6. Hand off and record the open loop
 
 Package the skill and say plainly that it must be uploaded out-of-band, then
 record a pending-handoff note in `standing/` per the rules above. Until that
-upload is confirmed, the expert is folders and a roster line — scaffolding, not a
-working expert. Say so rather than implying it's ready.
+upload is confirmed, the expert is just folders — scaffolding, not a working
+expert. Say so rather than implying it's ready.
 
 ### Expect to iterate
 
@@ -428,9 +423,9 @@ front.
 ## Versioning
 
 This protocol carries a version, recorded in its own frontmatter as
-`protocol_version` (e.g. `2.3.0`) and stated once in the body too, so it's
+`protocol_version` (e.g. `3.1.0`) and stated once in the body too, so it's
 visible without opening frontmatter — **this protocol is `protocol_version:
-2.3.0`.** Every expert skill carries the same field, `protocol_version`: the
+3.1.0`.** Every expert skill carries the same field, `protocol_version`: the
 version it was last brought into conformance with. One stamp, not separate
 created/updated fields — a second field here would just be something else that
 goes stale. The field means slightly different things depending which file it's
@@ -625,43 +620,28 @@ starting constraint rather than a law of nature — if a genuinely shared concer
 emerges, the right move is usually to lift it into reference or into this
 protocol, not to create a cross-expert dependency.
 
-## The one index
+## No indexes
 
-There is exactly one `_index.md` in the system: **`Experts/_index.md`**, the
-roster. It answers "what experts do I have" conversationally, without opening
-the vault or digging through installed skills.
+There is no hand-maintained index anywhere in this system — not for the
+expert roster, not for `Reference/`, not for `standing/` or `learnings/`.
+`Experts/_index.md` existed once and was removed 2026-09-09: the folders
+under `Experts/` already answer "what experts do I have" as well as a
+roster line did, so the roster was hand-maintenance duplicating a live
+directory listing.
 
-Keep it bare. Frontmatter, a one-line `## Summary`, an `## Experts` list of
-skill names, and a `## Log`:
+**A stale index is worse than no index**, because it gets trusted and the
+folder read gets skipped — this is why the roster didn't survive, and it's
+the same reasoning that already ruled out a reference index, a vault-root
+index, or an index on `standing/`/`learnings/`. Every one of those requires
+upkeep proportional to normal activity, and each answers a question the
+vault tooling already answers on demand.
 
-```markdown
-## Experts
-- `expert-japanese-language`
-- `expert-vampire-survivors`
-```
-
-Nothing else. Not a table, not a domain column — the skill name already implies
-the domain — and **not an explanation of how the system works**, which is what
-this skill is for. An index that restates the protocol is a second copy of the
-protocol, and it will be the stale one. Note an expert that is drafted but not
-yet uploaded, since a roster that lists a non-working expert is worse than no
-roster; drop the marker when the upload is confirmed.
-
-**Why this index survives when others don't.** It changes only when an expert is
-created or retired — a handful of times a year, at moments when a session is
-already writing to the vault. Step 5 of *Creating a new expert* and the
-upload-confirmation step both touch it. That is a maintenance plan, not a hope.
-Any index whose upkeep scales with how often ordinary notes change has no such
-plan and will go stale; **a stale index is worse than no index**, because it gets
-trusted and the folder read gets skipped.
-
-That is why there is no reference index, no vault-root index, and no index on
-`standing/` or `learnings/`. Those all require hand-maintenance proportional to
-normal activity, and they answer questions the vault tooling already answers on
-demand — list the folder, run a search, call whatever overview the tooling
-exposes. Scan when you need to know; don't maintain a map. If you find an old
-index of that kind, treat it as legacy and check it against the folders before
-believing a word of it.
+Scan when you need to know; don't maintain a map. List the `Experts/`
+directory for the roster, list an expert's `learnings/`/`standing/` for
+what's currently there, search `Reference/` for shared material. If you
+find an old index of any kind — including a leftover `_index.md` from
+before this change — treat it as legacy and check it against the folders
+before believing a word of it.
 
 *Which experts care about which reference material* belongs in each expert's own
 skill, which names its own reference paths. That is written once, deliberately,
@@ -674,7 +654,7 @@ summaries skimmable?", "any broken links?", or "check the vault for problems".
 Also run a check when it's cheap and relevant — after a promotion, or when
 several notes have been added in one session.
 
-Three things are worth checking:
+Two things are worth checking:
 
 **Summary standing.** Read the first sentence of each learning's `## Summary`.
 Does it say how settled the claim is? A summary that opens with the claim alone,
@@ -688,24 +668,19 @@ promotion *creates* dead links by design, since it deletes the learning, so
 breakage right after a promotion is expected rather than a mistake; say which
 kind you're looking at.
 
-**Roster drift.** Compare `Experts/_index.md` against the subfolders of
-`Experts/`. Both directions matter: an expert with folders but no roster line,
-and a roster line for an expert whose folders are gone. Use a directory-aware
-call — a file listing will not show an expert whose folders are still empty.
-
 ### Report, don't silently fix
 
-Links and index drift are mechanical — deterministic, and the vault tooling may
-already do them as a single call. Check what's available before reconstructing
-either by hand; a purpose-built scan beats reading every file, and it won't miss
-link syntaxes you forgot to account for. Summary standing is different: whether a
+Links are mechanical — deterministic, and the vault tooling may already do
+this as a single call. Check what's available before reconstructing it by
+hand; a purpose-built scan beats reading every file, and it won't miss link
+syntaxes you forgot to account for. Summary standing is different: whether a
 first sentence conveys how settled a claim is takes reading and judgment, and no
 scan can do it. Read those.
 
 Say what's wrong, propose the specific fix, and let Matthew decide. This matters
 most for summaries — rewriting one means restating how confident he is about
-something, and that judgment is his. Index and link repairs are safer to just
-offer to apply.
+something, and that judgment is his. Link repairs are safer to just offer to
+apply.
 
 Group findings by check and lead with the count, so a clean audit reads as one
 line rather than a wall of reassurance. If nothing's wrong, say so briefly and
