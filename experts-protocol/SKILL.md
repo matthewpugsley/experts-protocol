@@ -1,7 +1,7 @@
 ---
 name: experts-protocol
-protocol_version: 3.1.0
-description: Shared conventions and authoring procedure for the expert system — vault folder semantics, frontmatter schema, versioning, promotion rules, provenance, health checks, and conformance checking. Consult this whenever working with any expert skill (expert-japanese-language, expert-investing, etc.), creating a new expert, checking one or more skills for conformance, setting the expert system up on a new machine, vault, or Claude install, reading or writing anything under Experts/ or Reference/, deciding whether a learning is ready to promote, or answering "what experts do I have" or "what can this do." Also use when deciding skill-vs-standing-note placement, adding or editing vault frontmatter, when an expert skill references "the protocol" without spelling out the rules, or auditing the vault — skimmable summaries, broken links.
+protocol_version: 4.0.0
+description: Matthew's personal expert system — converses as whichever domain expert he explicitly names (warframe, japanese-language, vampire-survivors, or any other domain under Experts/ in his Obsidian vault) when invoked directly ("talk to my warframe expert") or via a fixed per-Project/per-client instruction naming a domain. Also use for maintaining the system itself: creating a new expert, checking a profile note's or this skill's own conformance, deploying to a new vault or client, deciding note placement (profile vs. standing vs. learnings), adding or editing vault frontmatter, promoting a learning, or auditing the vault — skimmable summaries, broken links.
 ---
 
 # Expert Protocol
@@ -12,18 +12,23 @@ Each expert supplies its own expertise; this file supplies the operating rules
 they all share, so those rules live in one place and cannot drift apart.
 
 If you are operating as an expert (or helping build one), read this first, then
-apply the expert's own skill on top of it.
+load that expert's own profile note from the vault on top of it — see
+*Consulting an expert*.
 
 ## The core idea
 
 An expert is a bounded persona with deep knowledge of one domain, consulted
-through conversation. Its knowledge lives in four places, distinguished by two
-properties that actually predict behavior: **who can write to it** and **how
-fast it changes**.
+through conversation. Unlike earlier versions of this protocol, an expert is
+not itself a packaged skill — only this protocol is. An expert is a folder in
+the vault; `experts-protocol` is what knows how to read and operate on it.
+
+Its knowledge lives in four places, distinguished by two properties that
+actually predict behavior: **who can write to it** and **how fast it
+changes**.
 
 | Component | Scope | Who writes it | Cadence | Lives in |
 |---|---|---|---|---|
-| **skill** | this expert only | Matthew, out-of-band | slow | the skill zip (SKILL.md + bundled files) |
+| **profile** | this expert only | Matthew, on the expert's proposal | slow | `Experts/<expert>/profile.md` |
 | **learnings** | this expert only | the expert, freely | medium | `Experts/<expert>/learnings/` |
 | **standing** | this expert only | the expert, freely | fast | `Experts/<expert>/standing/` |
 | **reference** | shared across experts | Matthew, or an expert (see below), or nobody (external) | varies | wherever shared knowledge lives — see Reference |
@@ -32,9 +37,12 @@ The first three are **internal** — specific to one expert. The fourth is
 **external** — general knowledge that two experts might both draw on, which is
 why it lives outside any expert's folder.
 
-The reason this table matters more than the tree structure: the skill is the only
-component that cannot be edited in the course of a conversation. Everything
-downstream of that fact follows from it.
+The reason this table matters more than the tree structure: the profile note is
+the one component whose edits go through Matthew before landing. That's an
+editorial gate now, not a technical one — the note lives in the vault like
+everything else, and nothing stops it being edited mechanically in the course
+of a conversation. It just shouldn't be *rewritten* without confirmation.
+Everything downstream of that distinction follows from it.
 
 ## Operations
 
@@ -45,21 +53,51 @@ complete with no inference required.
 
 | Operation | Scope | Invoke via | What it does | Full detail |
 |---|---|---|---|---|
-| **Health check** | one expert | the expert itself (e.g. `expert-warframe`) | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links | Health checks |
-| **Conformance check** | one or more skills | `experts-protocol` (name the skill(s) to check) | Audit a skill file's frontmatter and body shape against this protocol (plus vault state, when checking `experts-protocol` itself) | Checking an existing skill against the protocol |
+| **Consult an expert** | one expert | `experts-protocol`, naming the domain (e.g. "talk to my warframe expert") | Load that expert's profile note (plus relevant `standing/`/`learnings/`) from the vault and operate as that expert on top of this protocol | Consulting an expert |
+| **Health check** | one expert | `experts-protocol`, while consulting that expert | Audit an expert's own `learnings/`/`standing/` — summary standing, broken links | Health checks |
+| **Conformance check** | one expert's profile note, or this protocol's own vault-side files | `experts-protocol` (name what to check) | Audit a profile note's shape against this protocol, or check this skill's bundled Guide/Template against the vault copies | Checking an expert's profile note · Checking experts-protocol itself |
 | **Create a new expert** | new expert | `experts-protocol` (no expert exists yet) | Elicit, draft, and stand up a new expert from scratch | Creating a new expert |
 | **Deploy to a new vault** | whole system | `experts-protocol` | First-time setup on a vault that has never held experts | Deploying to a new vault |
 | **Connect a new client** | one client | `experts-protocol` | Connect an additional client (e.g. Claude Code) to a vault already set up for the expert system | Deploying to a new client (Claude Code) |
-| **Promote a learning** | one expert | the expert being promoted from | Flag a settled finding for promotion (Matthew finalizes the skill edit) | Promotion is the one step that requires Matthew |
+| **Promote a learning** | one expert | `experts-protocol`, while consulting the expert being promoted from | Flag a settled finding for promotion into the profile note (Matthew confirms before it's written) | Promotion is the one step that requires Matthew |
 
-**Rule of thumb:** if the operation only needs knowledge the expert already
-has about its own domain and its own folders, invoke the expert. If it needs
-knowledge that lives in the protocol itself — the conformance rules, or
-anything before an expert exists at all — invoke `experts-protocol`.
+**Rule of thumb:** every operation invokes `experts-protocol` — there is no
+other skill to invoke, since experts are vault folders, not skills. Naming a
+domain when you invoke it (*Consulting an expert*) is what puts operations
+like *Health check* or *Promote a learning* in the context of one expert
+instead of the protocol in the abstract.
 
-Individual expert skills should point here rather than restate any row —
-same reasoning as *No indexes*: one place that changes at protocol-edit
-cadence beats several copies that drift.
+## Consulting an expert
+
+There's no per-domain skill to trigger automatically, and that's deliberate —
+this protocol doesn't try to guess from conversation content when an expert
+is relevant. Consulting one is explicit: name the domain when you invoke
+`experts-protocol`, the same way you'd seek out a particular professor rather
+than hoping a general announcement reaches the right one.
+
+In practice this looks like:
+
+- **In conversation, directly** — "I'd like to talk to my warframe expert," or
+  similar. `experts-protocol` reads that as naming the domain and loads
+  `Experts/warframe/`.
+- **Standing instruction, per Project or per client** — a Chat Project (or
+  Code's project-level `CLAUDE.md`) can carry a fixed instruction like "use
+  experts-protocol for the warframe expert," so a Project dedicated to one
+  domain doesn't need to be told every session.
+
+Either way, once a domain is named: read that expert's profile note
+(`Experts/<domain>/profile.md`) in full — as an explicit step in this
+procedure, not via auto-load; nothing in this system auto-loads by default,
+profile notes included — then check `standing/` for anything currently in
+flight, and `learnings/` if the conversation touches something still under
+construction. Operate as that expert on top of this protocol's mechanics for
+the rest of the conversation, until told otherwise or the conversation ends.
+
+This is deliberately not keyword-triggered. A trigger scoped tightly enough to
+avoid false positives ends up only firing when the domain was already obvious
+from context, which adds nothing; scoped loosely enough to catch ambiguous
+cases, it fires on the wrong expert as often as the right one. Naming the
+domain costs one clause and removes the guesswork entirely.
 
 ## Vault layout
 
@@ -69,8 +107,14 @@ _ExpertsProtocol/
   Frontmatter Template.md ← blank starting block for a new note
 Experts/
   <expert-name>/
-    learnings/           ← draft knowledge that may later be promoted into the skill
-    standing/            ← what we're working on now, recent context, open to-dos
+    profile.md            ← the profile note: what this expert is, how it
+                             works, where its own knowledge lives. Read as an
+                             explicit step whenever the expert is consulted —
+                             no retrieval flag needed, same as everything
+                             else in this system.
+    learnings/            ← draft knowledge that may later be promoted into
+                             the profile note
+    standing/             ← what we're working on now, recent context, open to-dos
 Reference/
   <however it's organized>
 ```
@@ -78,9 +122,14 @@ Reference/
 Shared reference also lives outside the vault — see Reference below. The layout
 above is the vault portion of it.
 
-Expert folders in the vault use the bare domain name (`japanese-language`).
-The `expert-` prefix belongs to the *skill* name (`expert-japanese-language`),
-not the folder — repeating it in the path would be noise.
+Expert folders in the vault use the bare domain name (`japanese-language`),
+matched by the name you give when consulting the expert — see *Consulting an
+expert*. The profile note inside it is always named `profile.md`, not the
+domain name — a fixed filename means finding it never depends on remembering
+or guessing how a given expert named its own note. Earlier versions of this
+protocol packaged each expert as its own skill and prefixed that skill's name
+with `expert-` (`expert-japanese-language`); that prefix was specific to the
+retired per-expert skill and never applied to the vault path.
 
 **An empty folder is not a missing folder.** Most vault tooling lists *files*,
 so an expert with an empty `learnings/` will look like it has no `learnings/` at
@@ -89,12 +138,12 @@ strength of a file listing. Use a directory-aware call, or just create the note
 you came to write — the folder is there. This misreading has happened more than
 once; it is a property of the tools, not of the vault.
 
-**A remembered or stated filename is not a confirmed one.** A skill's "Where
-things live" section may name current files as illustrative examples, and
-prior turns or memory may carry forward names from an earlier session.
+**A remembered or stated filename is not a confirmed one.** A profile note's
+"where things live" section may name current files as illustrative examples,
+and prior turns or memory may carry forward names from an earlier session.
 Neither is ground truth once a folder has been restructured, split, or
 renamed into. Before reading or writing to a specific file — and especially
-before treating a skill-body list of filenames as exhaustive — list the
+before treating a profile note's list of filenames as exhaustive — list the
 directory. This is the same failure as the empty-folder case above, just in
 the opposite direction: trusting an assumption about contents instead of
 checking them. The fix costs one cheap call; skipping it risks writing to a
@@ -103,23 +152,30 @@ now does.
 
 ## Folder placement is the classification
 
-There is deliberately no `status` or `maturity` field. A note's folder says what
-it is, which means the classification cannot silently drift out of sync with the
-file's actual location the way a frontmatter field can.
+There is deliberately no `status` or `maturity` field. A note's folder (or, for
+the profile note, its position at the expert's root) says what it is, which
+means the classification cannot silently drift out of sync with the file's
+actual location the way a frontmatter field can.
 
+- **`profile.md`** — settled, stable knowledge about the expert itself: what
+  it is, how it works, its own working style, where its own knowledge lives.
+  The one file in an expert's folder that requires Matthew's confirmation to
+  change — see *Promotion is the one step that requires Matthew*.
 - **`standing/`** — current working context. Where we are, what's in flight, what
   came up yesterday, specific to-dos. Ephemeral by nature. Standing notes are
   not candidates for promotion; they describe the work, not the knowledge.
 - **`learnings/`** — knowledge under construction. Something that seems true and
-  useful about the domain but hasn't earned a place in the skill yet. When a
-  learning is promoted into the skill, **delete it from `learnings/`** — leaving
-  a copy behind creates two sources of truth that will disagree within a month.
-- **`Reference/`** — permanent, general, shared. Never promoted into any skill,
-  because it doesn't belong to any one expert. Organized however is intuitive.
+  useful about the domain but hasn't earned a place in the profile note yet.
+  When a learning is promoted, **delete it from `learnings/`** — leaving a
+  copy behind creates two sources of truth that will disagree within a month.
+- **`Reference/`** — permanent, general, shared. Never promoted into any
+  profile note, because it doesn't belong to any one expert. Organized
+  however is intuitive.
 
 When you are unsure where something goes, ask: *is this about the domain, or
-about the work?* Domain → learnings. Work → standing. And: *would another expert
-plausibly want this?* If yes, it's reference, not a learning.
+about the work?* Domain → learnings (or, once settled, the profile note). Work
+→ standing. And: *would another expert plausibly want this?* If yes, it's
+reference, not a learning.
 
 ### Open every learning's summary with where it stands
 
@@ -185,8 +241,7 @@ default; the two are kept in sync deliberately, as one edit, not as a standing
 rule about which one wins. If a conformance check on this skill ever finds
 them disagreeing, that isn't a signal about which side is right — it's
 evidence the sync didn't happen, and the fix is to finish it, not to pick a
-winner. See *Checking an existing skill against the protocol* for how that
-check runs.
+winner. See *Checking experts-protocol itself* for how that check runs.
 
 Two points stay here, because they are protocol rather than field semantics.
 Retrieval is a property of the *folder*, not something each note declares, and
@@ -194,6 +249,11 @@ the `retrieval` field exists only to record an exception to its folder's
 default. And the fail-safe direction is on-demand: a file that doesn't load is a
 visible gap you'll notice, while a file that auto-loads when it shouldn't
 quietly eats context budget and pushes more relevant things out.
+
+The profile note needs no `retrieval` field at all: it isn't loaded by a
+retrieval mechanism, it's read as an explicit step of *Consulting an
+expert*, the same way `standing/` and `learnings/` are read by explicit
+procedure rather than auto-load.
 
 ## Deploying to a new vault
 
@@ -258,7 +318,7 @@ depends on decisions made in the previous.
 
 ### 1. Elicit before drafting
 
-Do not start writing from the domain name alone. A skill drafted from an
+Do not start writing from the domain name alone. A profile note drafted from an
 unexamined guess reads plausibly and then fails on contact, and it's much harder
 to correct a confident wrong draft than to ask first. Ask about:
 
@@ -267,7 +327,8 @@ to correct a confident wrong draft than to ask first. Ask about:
 - **What already exists.** Notes, documents, prior skills, spreadsheets,
   databases. Most new experts are migrations of something already written down,
   and that existing material is usually better than anything drafted fresh.
-- **What's currently in flight** — so it lands in `standing/`, not the skill.
+- **What's currently in flight** — so it lands in `standing/`, not the profile
+  note.
 - **How the person wants to be worked with in this domain.** Where they get
   stuck, what they already know, what a bad session looks like.
 
@@ -276,105 +337,42 @@ available, read it before asking — half the questions usually answer themselve
 
 ### 2. Sort what you learned
 
-The most common failure is putting the wrong thing in the skill. The test is
-cadence, not topic:
+The most common failure is putting the wrong thing in the profile note. The
+test is cadence, not topic:
 
-| Goes in the **skill** | Goes in **standing/** |
+| Goes in the **profile note** | Goes in **standing/** |
 |---|---|
 | Stable across months | Changes week to week |
 | True regardless of what's happening now | Describes what's happening now |
 | Domain knowledge, working style, conventions | Positions, counts, current chapter, open to-dos |
 | Where things live and how to reach them | What's in flight in those places |
 
-Anything you would have to edit and re-upload to keep accurate belongs in
-`standing/`. A skill that needs republishing to stay true was written wrong.
+Anything that changes week to week belongs in `standing/`, not the profile
+note. A profile note that needs frequent rewriting to stay true was written
+wrong — it's tracking work, not domain knowledge.
 
 Material that's a genuine finding but not yet settled goes in `learnings/`, not
-the skill — even at creation time.
+the profile note — even at creation time.
 
-### 3. Write the description first
+### 3. Draft the profile note
 
-The `description` frontmatter field decides whether the skill ever fires, and
-it's also the one part of a skill paid for on every session regardless of
-whether it fires — write it before the body, while the elicitation is fresh,
-and keep it deliberately thin.
+One part of this shape is required; the rest is loose.
 
-**Objective: minimize, not maximize.** Name the domain and its distinctive
-vocabulary — proper nouns, tools, jargon nobody outside the domain uses — and
-stop. Write it in third person, describing when to use the skill rather than
-what it contains. No mood or behavior clauses ("also use when he seems X"), no
-restating one topic three ways for safety margin — thoroughness belongs in the
-body, which costs nothing until the skill fires.
-
-The one exception that survives being asked "why is this here": a trigger
-catching something the person wouldn't think to invoke on their own. In
-practice this is rare, because a trigger scoped to "while already talking about
-the domain" adds nothing the domain name wasn't already catching, and a trigger
-with no domain content isn't domain-specific at all — it's a flat cost every
-session pays. Default to skepticism of any exception; a growing number of
-experts is not a reason to add coverage — descriptions stay minimal regardless
-of roster size, since "what experts do I have" is answered by listing the
-`Experts/` folder directly (see *No indexes*), not by the description.
-
-**Hard constraints, enforced at validation:**
-
-| Field | Limit |
-|---|---|
-| `name` | ≤ 64 chars; kebab-case only (lowercase, digits, hyphens); no leading, trailing, or doubled hyphens |
-| `description` | ≤ 1024 chars; no angle brackets (`<` or `>`) |
-| `compatibility` | ≤ 500 chars, if used at all |
-
-Also stamp `protocol_version` in the skill's frontmatter with this protocol's
-current version (see Versioning) — every expert skill carries this field,
-recording the version it was last brought into conformance with. Bare, at the
-top level — not nested under `metadata`.
-
-**Packaging note.** `skill-creator`'s bundled `quick_validate.py` (run
-automatically by its `package_skill.py`) rejects any top-level frontmatter key
-outside `{name, description, license, allowed-tools, metadata,
-compatibility}`, so it flags a bare `protocol_version` as invalid. That's a
-false positive for this workflow, not a real constraint — confirmed
-2026-08-23 by a direct test upload through Claude Desktop's personal-skill
-settings, which accepted a bare custom top-level key without complaint. This
-repo's own build has always sidestepped the issue by zipping manually rather
-than going through `package_skill.py` (see its README's *Rebuilding the zip*).
-Package every expert skill the same way — direct zip
-(`Compress-Archive`/`zip -r` on the skill folder, then rename to `.skill`),
-never through `package_skill.py` — so this false positive doesn't block a
-conformance fix. If `quick_validate.py`'s allowlist is ever tightened for
-real, this note is the thing to revisit.
-
-Under the old maximal approach, the description limit was the thing that
-eventually forced trimming; under minimize-by-default it should rarely be
-approached at all. Reaching for it is a signal to ask why the description grew,
-not a target to write toward.
-
-Validate before packaging rather than after. A skill that fails validation fails
-to install, and the error arrives at upload time when the context that produced
-it is gone.
-
-### 4. Draft the body
-
-Two parts of this shape are required; the rest is loose.
-
-**Always: Where knowledge lives.** State plainly that `learnings/` and
-`standing/` are Obsidian vault paths — not local files, not anything in the
-skill's own bundle — then give this expert's own vault-relative paths by name:
-`Experts/<bare-name>/learnings/`, `Experts/<bare-name>/standing/`. Give each
-folder a general statement of purpose — what kind of thing goes here, not just
-the files that happen to exist today, so the expert knows it can create a new
-standing note on a new fast-moving topic rather than only recognizing the ones
-it was handed at creation. Per *Access is mechanism, not convention*, don't
-hardcode which tool reaches the vault — say "vault" and let the expert use
-whatever's configured. If the skill has its own bundled `references/` folder,
-say what's in it and distinguish it explicitly from both the vault's
-`learnings/`/`standing/` and the vault's shared `Reference/` tier — three
-different things sharing confusable names. State whether the expert draws on
-shared `Reference/` at all, even if the answer is "no." Close with the no-vault
-fallback: if no vault is reachable, say so plainly rather than pretending to
-persist findings. Point to `experts-protocol` by name for anything beyond
-location — promotion, provenance, versioning — rather than restating those
-rules here.
+**Always: where knowledge lives.** State plainly, in the profile note itself,
+that `learnings/` and `standing/` are this expert's own vault paths, siblings
+of the profile note: `Experts/<bare-name>/learnings/`,
+`Experts/<bare-name>/standing/`. Give each folder a general statement of
+purpose — what kind of thing goes here, not just the files that happen to
+exist today, so the expert knows it can create a new standing note on a new
+fast-moving topic rather than only recognizing the ones it was handed at
+creation. Per *Access is mechanism, not convention*, don't hardcode which tool
+reaches the vault — say "vault" and let the expert use whatever's configured.
+State whether the expert draws on shared `Reference/` at all, even if the
+answer is "no." Close with the no-vault fallback: if no vault is reachable,
+say so plainly rather than pretending to persist findings — that applies to
+every write this expert makes, not just `standing/`/`learnings/`. Point to
+`experts-protocol` by name for anything beyond location — promotion,
+provenance — rather than restating those rules here.
 
 **Sometimes: Installation.** A named section for org- or context-specific
 material — present only when the domain actually has institutional context (an
@@ -390,138 +388,130 @@ how a working session goes · failure modes and how to respond to them · tone �
 and, **last**, a section named after the person — `## Working with Matthew`, not
 `## Personal` — covering what they already know, where they get stuck, what a
 bad session looks like. Naming it after the person and placing it last is
-deliberate: it's the swap-out or strip-out unit if this skill is ever shared or
-gated behind an institution-facing interface, without building any runtime
-dispatch logic now. The short top framing stays even in a stripped-down portable
-version; the named section is the detailed calibration payload and is what gets
-removed or swapped.
+deliberate: it's the swap-out or strip-out unit if this profile note is ever
+shared or gated behind an institution-facing interface, without building any
+runtime dispatch logic now. The short top framing stays even in a
+stripped-down portable version; the named section is the detailed calibration
+payload and is what gets removed or swapped.
 
 Keep all of it to what changes behavior. Background that reads well but wouldn't
 alter a single response is cost without benefit.
 
-### 5. Create the vault structure
+No `retrieval` field is needed on the profile note — see *Frontmatter*. It's
+read by an explicit step of *Consulting an expert*, not by auto-load.
+
+### 4. Create the vault structure
 
 `Experts/<bare-domain-name>/` with `learnings/` and `standing/` beneath it, no
-`expert-` prefix on the folder. Write the standing notes identified in step 2 —
-a new expert with an empty `standing/` usually means step 1 didn't dig enough.
+`expert-` prefix on the folder, and the profile note drafted in step 3 written
+to `Experts/<bare-domain-name>/profile.md`. Write the standing notes
+identified in step 2 — a new expert with an empty `standing/` usually means
+step 1 didn't dig enough.
 
-### 6. Hand off and record the open loop
+### 5. It's live
 
-Package the skill and say plainly that it must be uploaded out-of-band, then
-record a pending-handoff note in `standing/` per the rules above. Until that
-upload is confirmed, the expert is just folders — scaffolding, not a working
-expert. Say so rather than implying it's ready.
+Once the profile note and folder structure exist in the vault, the expert is
+usable — there's no packaging or upload step standing between drafting it and
+consulting it the way there was under the old skill-per-expert model. Say so
+plainly rather than treating it as unfinished.
 
 ### Expect to iterate
 
 A first pass is a starting point. The parts that need revision earliest are
-usually the description (it fires too rarely or too often) and the skill/standing
-split (something stable-looking turns out to move). Both are cheap to fix once
-the expert has been used a few times, and neither is worth agonizing over up
-front.
+usually the elicitation depth (something stable-looking turns out to move) and
+the profile/standing split. Both are cheap to fix once the expert has been
+consulted a few times — editing the profile note directly is exactly as cheap
+as editing any other vault note, it just still goes through Matthew — and
+neither is worth agonizing over up front.
 
 ## Versioning
 
 This protocol carries a version, recorded in its own frontmatter as
-`protocol_version` (e.g. `3.1.0`) and stated once in the body too, so it's
+`protocol_version` (e.g. `4.0.0`) and stated once in the body too, so it's
 visible without opening frontmatter — **this protocol is `protocol_version:
-3.1.0`.** Every expert skill carries the same field, `protocol_version`: the
-version it was last brought into conformance with. One stamp, not separate
-created/updated fields — a second field here would just be something else that
-goes stale. The field means slightly different things depending which file it's
-on: a self-declaration on the protocol, a conformance claim on an expert skill —
-same name, same comparison mechanics, worth knowing even though it doesn't need
-a different name.
+4.0.0`.** Nothing else carries this field. Earlier versions of this protocol
+had every expert skill stamp its own `protocol_version` as a conformance
+claim; that machinery is gone along with per-expert skills themselves — there
+is no longer a per-expert file to compare a version number against, and
+tracking one on a profile note would just be something else to go stale.
 
-Standard semver: MAJOR for a change that makes a previously-conformant skill
-non-conformant (a new required section, a changed hard constraint, a changed
-body-shape expectation), MINOR for a backward-compatible addition, PATCH for
-wording or typo fixes that change nothing structural. Bump MAJOR even for a
-narrow change — a schema change that invalidates every existing record is
-breaking regardless of how much surrounding structure survives unchanged.
+Standard semver still governs changes to this protocol itself: MAJOR for a
+change that makes a previously-conformant profile note or vault layout
+non-conformant (a new required section, a changed body-shape expectation),
+MINOR for a backward-compatible addition, PATCH for wording or typo fixes that
+change nothing structural.
 
-The payoff is a cheap check before reading a single line of the skill being
-examined:
+Without per-expert version stamps, there's no cheap equal/ahead/behind check
+to run before looking at an expert. *Checking an expert's profile note against
+this protocol*, next, runs whenever asked, or whenever this protocol changes
+enough that older profile notes are worth revisiting — not gated on a version
+comparison.
 
-- **Equal** — conformant by definition. Nothing to check.
-- **Protocol ahead** — the skill predates this revision. Run the conformance
-  check, fix what's flagged, update `protocol_version` to match.
-- **Skill ahead** — shouldn't happen under normal use. Flag it and stop; Matthew
-  resolves it rather than either side guessing which is stale.
+## Checking an expert's profile note against this protocol
 
-## Checking an existing skill against the protocol
-
-*Creating a new expert* says what a skill should look like when it's written
-from scratch. This is the same checklist run in the other direction, against a
-skill that already exists — usually because the protocol itself just changed.
-Expect this to recur: every protocol revision leaves a batch of skills that
-predate it.
-
-This procedure is self-contained. It may run in a fresh conversation that has
-none of the context behind a given revision — just this skill and the skill
-being checked. Don't assume anything beyond what's written here and in
-*Creating a new expert*.
+*Creating a new expert* says what a profile note should look like when it's
+written from scratch. This is the same checklist run in the other direction,
+against a profile note that already exists — usually because this protocol
+itself just changed shape. Expect this to recur: a protocol revision can leave
+older profile notes behind even though nothing forces them to update.
 
 This is distinct from *Health checks* below: that audits the contents of
-`learnings/` and `standing/`; this audits the skill file itself.
+`learnings/` and `standing/`; this audits the profile note itself. It's also
+distinct from *Checking experts-protocol itself*, next: that's about this
+skill's own bundled files, not about any individual expert.
 
-**One addition when the skill being checked is `experts-protocol` itself.**
-Every other check here is about a skill file's own frontmatter and body —
-this one is about whether the vault side of the protocol has kept up. If a
-vault is reachable: confirm `_ExpertsProtocol/` exists with both `Frontmatter
-Guide.md` and `Frontmatter Template.md` — if it doesn't, that's a first-deploy
-gap, not a conformance gap, so point at *Deploying to a new vault* rather than
-reconstructing it here. If it exists, diff both files against this skill's own
-bundled `references/` copies. Equal — nothing to do. Different — report the
-diff plainly and propose syncing the vault to match the bundle, but never
-apply it without confirmation: a difference says only *that* the two
-diverged, not *why*, and the fix in the rare reverse case looks different.
-This addition doesn't depend on Step 0 or on `protocol_version` at all —
-the Guide and Template aren't a separately versioned thing, they're
-implementation detail of this one skill, and either they match its current
-bundle or they don't.
+There's no version number to check first — see *Versioning*. Run this
+whenever asked, or when you notice a profile note that looks like it predates
+a shape change to this protocol.
 
-**Step 0: check the version first.** Compare the skill's `protocol_version`
-against this protocol's current version (see Versioning). Equal means already
-conformant — skip the rest. Only proceed past this step when the protocol is
-ahead.
+**What to check**, against the shape in *Creating a new expert*, step 3:
+- Named `profile.md`, no `retrieval` field set on it (it's read by explicit
+  procedure, not auto-load — see *Consulting an expert*).
+- Where-things-live stated explicitly as vault paths, concrete, with
+  `learnings/` and `standing/` each given a general purpose rather than named
+  only by their current files.
+- Installation present only where the domain has institutional context.
+- Personal material consolidated into one named section (`## Working with
+  Matthew`) at the end.
 
-**What to check** — two sources, already defined above, apply them rather than
-restating them:
-- **Frontmatter** — the hard constraints in step 3 (`name`, `description`,
-  `compatibility` limits), plus description proportionality: does the
-  description contain anything beyond the domain name and domain-specific
-  vocabulary? Flag anything that does.
-- **Body shape** — the shape in step 4: where-things-live stated explicitly as
-  vault paths, concrete, with `learnings/` and `standing/` each given a general
-  purpose rather than named only by their current files; installation present
-  only where the domain has institutional context; personal material
-  consolidated into one named section at the end.
+**Checking several at once:** survey before fixing — read every profile note
+first, produce one compact table (expert name, which checks it fails), no
+rewrites yet. Same lead-with-the-count instinct as *Health checks*. Then fix
+one at a time, in whatever order Matthew picks, confirming the gap and the
+proposed rewrite before drafting — a conformance fix is still a rewrite of a
+working profile note, per *Promotion is the one step that requires Matthew*,
+not a mechanical patch.
 
-**Running it across several skills:**
-1. **Survey before fixing.** Read every skill first; produce one compact table —
-   skill name, which checks it fails. No rewrites yet. Same lead-with-the-count
-   instinct as *Health checks*: a mostly-conformant batch should read as a short
-   list, not several essays.
-2. **Fix one at a time**, in whatever order the person picks. Confirm the gap
-   and the proposed rewrite before drafting body text — a conformance fix is
-   still a rewrite of a working skill, not a mechanical patch.
-3. **Every fix still needs the normal upload loop.** A rewritten skill is a
-   revised skill; *Close the loop on uploads* applies unchanged — nothing here
-   shortcuts packaging, upload, or confirmation. The `protocol_version` bump
-   belongs in the same edit and the same package as the fix itself — it's
-   part of the fix, not a separate follow-up. What waits on upload
-   confirmation is the *closure record*: don't mark the `standing/` pending
-   note resolved, or delete a promoted learning, until Matthew confirms the
-   upload actually happened.
+## Checking experts-protocol itself
+
+This is about whether the vault side of the protocol has kept up with this
+skill's own bundled copy — not about any individual expert's profile note.
+
+If a vault is reachable: confirm `_ExpertsProtocol/` exists with both
+`Frontmatter Guide.md` and `Frontmatter Template.md` — if it doesn't, that's a
+first-deploy gap, not a conformance gap, so point at *Deploying to a new
+vault* rather than reconstructing it here. If it exists, diff both files
+against this skill's own bundled `references/` copies. Equal — nothing to do.
+Different — report the diff plainly and propose syncing the vault to match
+the bundle, but never apply it without confirmation: a difference says only
+*that* the two diverged, not *why*, and the fix in the rare reverse case looks
+different.
 
 ## Promotion is the one step that requires Matthew
 
-An expert can write its own standing notes and its own learnings. It **cannot**
-write its own skill — skills are packaged out-of-band, zipped and uploaded, on a
-much slower cadence.
+An expert can write its own standing notes and its own learnings freely. It
+**cannot** write its own profile note — that edit needs Matthew's confirmation
+first.
 
-This is a structural bottleneck, not an oversight. So:
+This is an editorial bottleneck now, not a technical one. Under the old
+per-expert-skill model it was also a technical bottleneck — packaged, zipped,
+uploaded, on a much slower cadence — but that mechanism is gone. The profile
+note is an ordinary vault note, and editing it is mechanically no different
+from editing a learning; the gate exists because that note is what colors
+every future conversation with this expert, and that judgment call stays
+Matthew's.
+
+So:
 
 - Never assume a learning has been promoted. If it's still in `learnings/`, it
   hasn't been.
@@ -531,36 +521,19 @@ This is a structural bottleneck, not an oversight. So:
 - Don't try to grade every learning's readiness on a scale. "Is this good
   enough yet?" is a gradational judgment call, and forcing it into buckets
   creates decision friction without producing better decisions.
-
-### Close the loop on uploads
-
-Because the packaging step happens outside the conversation, an expert can't
-observe whether it actually happened. So make the handoff explicit and track it:
-
-1. When handing over a revised skill — or when creating a new expert, which
-   leaves folders that no skill is using yet — say plainly what still has to
-   happen out-of-band, and ask Matthew to confirm back once it's uploaded.
-2. Record the pending handoff as a note in `standing/`. It's work state, which
-   is exactly what standing is for, and it means the open loop survives the end
-   of the conversation instead of evaporating with it.
-3. **Don't delete a promoted learning until the upload is confirmed.** Deleting
-   on suggestion risks losing the content to a zip that never got uploaded.
-   Delete when the loop closes, and clear the pending note at the same time.
-4. If a pending handoff is sitting in `standing/` at the start of a later
-   session, mention it once. Once — a nudge is useful, nagging isn't, and
-   Matthew may have deliberately deferred it.
-
-There's no way to enforce any of this, and that's fine. The point is that the
-open loop is visible and written down rather than depending on memory.
+- Once Matthew confirms, write the change to the profile note and delete the
+  promoted learning in the same pass. There's no packaging or upload step to
+  wait on, so there's nothing to leave half-closed — do it in one motion once
+  he's said yes.
 
 ## Reference: the shared tier
 
 Reference is defined by *what it is*, not where it sits: **shared across experts,
-permanent, never promoted into any skill.** It spans several substrates, and the
+permanent, never promoted into any profile note.** It spans several substrates, and the
 conventions above apply only to the first:
 
 - **Vault folders** — markdown under a shared reference tree. Frontmatter and
-  summaries apply here; there is no index (see The one index). A well-named
+  summaries apply here; there is no index (see *No indexes*). A well-named
   folder tree is the map.
 - **Structured stores** — a local database reached through its own tooling.
   Frontmatter is meaningless here; the schema and the entity descriptions carry
@@ -612,8 +585,9 @@ it was a learning, not reference.
 ## Experts don't read each other
 
 Each expert is its own domain. An expert reads and writes only its own
-`learnings/` and `standing/` folders, plus shared reference. It does not read
-another expert's folders, and skill zips do not depend on each other.
+folder — profile note, `learnings/`, and `standing/` — plus shared reference.
+It does not read another expert's folder, and profile notes do not depend on
+each other.
 
 This keeps changes local: editing one expert can't break another. It's a
 starting constraint rather than a law of nature — if a genuinely shared concern
@@ -644,8 +618,9 @@ before this change — treat it as legacy and check it against the folders
 before believing a word of it.
 
 *Which experts care about which reference material* belongs in each expert's own
-skill, which names its own reference paths. That is written once, deliberately,
-at authoring time — not tracked centrally in a file nobody updates.
+profile note, which names its own reference paths. That is written once,
+deliberately, at authoring time — not tracked centrally in a file nobody
+updates.
 
 ## Health checks
 
@@ -662,8 +637,9 @@ burying "held up since June" or "unclear so far" on a later line, defeats the
 point of the convention — the folder stops being skimmable. Flag those and offer
 a rewrite that moves the judgment to the front.
 
-**Broken links.** Check that links out of learnings and standing notes actually
-resolve — to other notes in the same expert, and to `Reference/`. Note that
+**Broken links.** Check that links out of the profile note, learnings, and
+standing notes actually resolve — to other notes in the same expert, and to
+`Reference/`. Note that
 promotion *creates* dead links by design, since it deletes the learning, so
 breakage right after a promotion is expected rather than a mistake; say which
 kind you're looking at.

@@ -5,7 +5,7 @@ tags:
   - reference
 priority:
 retrieval: auto
-updated: 2026-09-09
+updated: 2026-09-11
 ---
 
 ## Summary
@@ -67,6 +67,13 @@ Nothing auto-loads by folder default anywhere. `retrieval: auto` is the only
 way a note loads automatically — a deliberate, per-note exception, never a
 folder-level assumption. (Changed 2026-09-09: `standing/` previously
 defaulted to auto-load.)
+
+One note sits outside this table entirely: an expert's own profile note,
+`Experts/<expert>/profile.md`, at the root of its folder rather than inside
+`standing/`, `learnings/`, or `Reference/`. It needs no `retrieval` field —
+it's read by an explicit procedural step whenever the expert is consulted,
+never by auto-load. See the `experts-protocol` skill's *Consulting an
+expert*.
 
 Elsewhere in the vault there's no folder-based default defined yet — use
 `retrieval` explicitly (`auto` or `on-demand`) until one is, the way this note
